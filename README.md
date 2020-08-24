@@ -16,6 +16,15 @@ $ cd ml-doodle-jump
 $ pip install -r requirements.txt
 ```
 
+### Running
+```
+$ python3 main.py
+```
+
+#### Notes
+
 **!** I'm dumb so this probably is really messy
 
 - Images pulled from official cuz I can't draw
+
+- Jumpers will get stuck in place when they get scared
