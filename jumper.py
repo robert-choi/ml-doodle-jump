@@ -13,19 +13,20 @@ class Jumper(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.footbox = pygame.rect.Rect(x, y+30, self.rect.width, 15)
         self.x_vel = x_velocity
         self.y_vel = -28
         self.left = False
         self.bounce = False
-        self.b_cool = 0
         self.max_height = False
         self.score =  0
         self.alive = True
         self.plat_index = 0
+        self.plats_hit = []
+        self.re_plat_hit = 0
 
     def update(self):
         next_y = self.rect.y + self.y_vel   # Continuous (downward) motion
-        self.b_cool -= 1
         if not next_y < display_width//2+100:
             self.rect.y = next_y
             self.max_height = False
@@ -38,13 +39,17 @@ class Jumper(pygame.sprite.Sprite):
             self.image = i_left
         else:
             self.image = i_right
-        #if self.y_vel > 0:  # Check for falling action by character
-        #    self.bounce = False
+        if self.y_vel > 0:  # Check for falling action by character
+            self.bounce = False
         if self.rect.left > display_width:  # Teleport to oposite side after reaching bounds
             self.rect.right = self.rect.left-display_width
         elif self.rect.right < 0:
             self.rect.left = self.rect.right+display_width
+        if len(self.plats_hit) > 5:
+            del self.plats_hit[0]
         if self.rect.y > display_height:    # Die if dead
+            self.alive = False
+        elif self.re_plat_hit > 5:
             self.alive = False
 
     def handle_keys(self):
@@ -66,7 +71,14 @@ class Jumper(pygame.sprite.Sprite):
 
     def check_coll_bounce(self, platform):
         b_coll = False
-        if not self.bounce and self.b_cool<1 and pygame.sprite.collide_rect(self, platform):
+        if not self.bounce and pygame.sprite.collide_rect(self, platform):
             self.bounce = True
             self.y_vel = platform.b_vel
-            self.b_cool = 3
+            if not platform.id in self.plats_hit:
+                self.plats_hit.append(platform.id)
+                self.re_plat_hit = 0
+                return (True, True)
+            else:
+                self.re_plat_hit += 1
+                return (True, False)
+        return (False, False)

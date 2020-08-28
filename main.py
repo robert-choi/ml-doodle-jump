@@ -14,22 +14,24 @@ from platforms import *
 def generate_plats(platforms, sprites):
     last_y = platforms[-1].rect.y
     plat_y = last_y-50
+    last_id = platforms[-1].id + 1
     while True:
         plat_created = False
         if randint(0,70)==1:    # 1/70 chance of generating plat every pixel
             if randint(1,7) == 7:   # Lucky 7 of bouncy platform appearing:
-                new_plat = Bouncy_platform(randint(1, 265), plat_y)
+                new_plat = Bouncy_platform(randint(1, 265), plat_y, last_id)
             else:
-                new_plat = Platform(randint(1,265), plat_y)     
+                new_plat = Platform(randint(1,265), plat_y, last_id)     
             plat_created = True    
         elif plat_y < last_y-150:   # To ensure the game is possible
-            new_plat = Platform(randint(1,265), plat_y)
+            new_plat = Platform(randint(1,265), plat_y, last_id)
             plat_created = True
         if plat_created:
             platforms.append(new_plat)
             sprites.add(new_plat)
             last_y = plat_y
             plat_y -= 50
+            last_id +=1
         plat_y -= 1
         if plat_y < -1000:
             break
@@ -58,7 +60,7 @@ def main(genomes, config):
         ge.append(g)
 
     all_sprites = pygame.sprite.LayeredUpdates()
-    platforms = [Platform(randint(1,265), 600)]
+    platforms = [Platform(randint(1,265), 600, 0)]
     for doodle in doodlers:
         all_sprites.add(doodle)
     generate_plats(platforms, all_sprites)
@@ -83,9 +85,9 @@ def main(genomes, config):
                 if doodle.rect.y > plat.rect.y:
                     doodle.plat_index = j
             ge[i].fitness += 0.1
-            output = nets[i].activate((doodle.rect.x, doodle.rect.y,
-                abs(doodle.rect.x - platforms[doodle.plat_index].rect.x),
-                abs(doodle.rect.y - platforms[doodle.plat_index].rect.y)))
+            output = nets[i].activate((doodle.rect.centerx, doodle.rect.centery,
+                (doodle.rect.centerx - platforms[doodle.plat_index].rect.centerx),
+                (doodle.rect.centery - platforms[doodle.plat_index].rect.centery)))
             if output[0] > 0.5:
                 doodle.move_right()
             elif output[0] < -0.5:
@@ -93,13 +95,10 @@ def main(genomes, config):
 
         for i, doodle in enumerate(doodlers):   # Update fitness based on survival
             if not doodle.alive:
-                ge[i].fitness -= 1
+                ge[i].fitness -= 5
                 doodlers.pop(i)
                 nets.pop(i)
                 ge.pop(i)
-            elif doodle.bounce:
-                doodle.bounce = False
-                ge[i].fitness += 5
 
         if len(doodlers) < 1:   # Check if doodlers exist
             running = False
@@ -112,20 +111,23 @@ def main(genomes, config):
         if len(platforms) < 10:
             generate_plats(platforms, all_sprites)
 
+        for i, doodle in enumerate(doodlers):     # Doodle behaviour for bounce and score
+            for plat in platforms:
+                result = doodle.check_coll_bounce(plat)
+                if result[0] and result[1]:
+                    ge[i].fitness += 10
+                elif result[0] and not  result[1]:
+                    ge[i].fitness  -= 3
+            if doodle.score > score+50:
+                score = doodle.score
+                top_scorrer = doodle
+
         if top_scorrer.max_height:  # Scroll all objects down
             for plat in platforms:
                 plat.rect.y -= top_scorrer.y_vel
             for doodle in doodlers:
                 if not doodle == top_scorrer:
                     doodle.rect.y -= top_scorrer.y_vel
-
-        for doodle in doodlers:     # Doodle behaviour for bounce and score
-            # doodle.handle_keys()
-            for plat in platforms:
-                doodle.check_coll_bounce(plat)
-            if doodle.score > score:
-                score = doodle.score
-                top_scorrer = doodle
 
         update_display(all_sprites, score)
 
