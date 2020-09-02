@@ -32,7 +32,6 @@ class Jumper(pygame.sprite.Sprite):
             self.max_height = False
         else:
             self.max_height = True  # Check for reaching max height to scroll
-            self.score -= self.y_vel
         if self.y_vel < terminal_vel:   # Accelerate to terminal velocity
             self.y_vel += gravity
         elif self.left:     # Image verification
@@ -41,10 +40,10 @@ class Jumper(pygame.sprite.Sprite):
             self.image = i_right
         if self.y_vel > 0:  # Check for falling action by character
             self.bounce = False
-        if self.rect.left > display_width:  # Teleport to oposite side after reaching bounds
-            self.rect.right = self.rect.left-display_width
-        elif self.rect.right < 0:
-            self.rect.left = self.rect.right+display_width
+        #if self.rect.left > display_width:  # Teleport to oposite side after reaching bounds
+        #    self.rect.right = self.rect.left-display_width
+        #elif self.rect.right < 0:
+        #    self.rect.left = self.rect.right+display_width
         if len(self.plats_hit) > 5:
             del self.plats_hit[0]
         if self.rect.y > display_height:    # Die if dead

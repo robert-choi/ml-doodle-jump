@@ -67,7 +67,8 @@ def main(genomes, config):
     top_scorrer = doodlers[0]
 
     clock = pygame.time.Clock()
-    score = 0
+    top_score = 0
+    base_score = 0
     running = True
 
     while running:
@@ -85,7 +86,7 @@ def main(genomes, config):
                 if doodle.rect.y > plat.rect.y:
                     doodle.plat_index = j
             ge[i].fitness += 0.1
-            output = nets[i].activate((doodle.rect.centerx, doodle.rect.centery,
+            output = nets[i].activate(((doodle.rect.centerx, doodle.rect.centery,
                 (doodle.rect.centerx - platforms[doodle.plat_index].rect.centerx),
                 (doodle.rect.centery - platforms[doodle.plat_index].rect.centery)))
             if output[0] > 0.5:
@@ -112,14 +113,16 @@ def main(genomes, config):
             generate_plats(platforms, all_sprites)
 
         for i, doodle in enumerate(doodlers):     # Doodle behaviour for bounce and score
+            doodle_next_score = (display_height - doodle.rect.y) - doodle.y_vel + base_score
+            doodle.score = max(doodle.score, doodle_next_score)
             for plat in platforms:
                 result = doodle.check_coll_bounce(plat)
                 if result[0] and result[1]:
                     ge[i].fitness += 10
                 elif result[0] and not  result[1]:
-                    ge[i].fitness  -= 3
-            if doodle.score > score+50:
-                score = doodle.score
+                    ge[i].fitness  -= 1
+            if doodle.score > top_score+5:
+                top_score = doodle.score
                 top_scorrer = doodle
 
         if top_scorrer.max_height:  # Scroll all objects down
@@ -128,8 +131,9 @@ def main(genomes, config):
             for doodle in doodlers:
                 if not doodle == top_scorrer:
                     doodle.rect.y -= top_scorrer.y_vel
+            base_score -= top_scorrer.y_vel
 
-        update_display(all_sprites, score)
+        update_display(all_sprites, top_score)
 
 
 def run(config_path):

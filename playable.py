@@ -35,9 +35,10 @@ def generate_plats(platforms, sprites):
         if plat_y < -1000:
             break
 
-def update_display(sprites, score):
+def update_display(sprites, score, special):
     win.fill(white)
     sprites.draw(win)
+    win.blit(pygame.Surface()
     win.blit(font.render(f'Top Score: {int(score)//10}', True, black), (200, 10))
     pygame.display.update()
 
@@ -57,7 +58,8 @@ def main():
     top_scorrer = doodlers[0]
 
     clock = pygame.time.Clock()
-    score = 0
+    top_score = 0
+    base_score = 0
     running = True
 
     while running:
@@ -81,22 +83,25 @@ def main():
         if len(platforms) < 10:
             generate_plats(platforms, all_sprites)
 
+        for doodle in doodlers:     # Doodle behaviour for bounce and score
+            doodle.handle_keys()
+            doodle_next_score = (display_height - doodle.rect.y) - doodle.y_vel + base_score
+            doodle.score = max(doodle.score, doodle_next_score)
+            for plat in platforms:
+                doodle.check_coll_bounce(plat)
+            if doodle.score > top_score+5:
+                top_score = doodle.score
+                top_scorrer = doodle
+
         if top_scorrer.max_height:  # Scroll all objects down
             for plat in platforms:
                 plat.rect.y -= top_scorrer.y_vel
             for doodle in doodlers:
                 if not doodle == top_scorrer:
                     doodle.rect.y -= top_scorrer.y_vel
+            base_score -= top_scorrer.y_vel
 
-        for doodle in doodlers:     # Doodle behaviour for bounce and score
-            doodle.handle_keys()
-            for plat in platforms:
-                doodle.check_coll_bounce(plat)
-            if doodle.score > score:
-                score = doodle.score
-                top_scorrer = doodle
-
-        update_display(all_sprites, score)
+        update_display(all_sprites, top_score, platforms[doodlers[0].plat_index].rect)
 
 
 if __name__ == '__main__':
