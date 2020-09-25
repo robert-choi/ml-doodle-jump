@@ -38,7 +38,6 @@ def generate_plats(platforms, sprites):
 def update_display(sprites, score, special):
     win.fill(white)
     sprites.draw(win)
-    win.blit(pygame.Surface()
     win.blit(font.render(f'Top Score: {int(score)//10}', True, black), (200, 10))
     pygame.display.update()
 

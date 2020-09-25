@@ -86,7 +86,7 @@ def main(genomes, config):
                 if doodle.rect.y > plat.rect.y:
                     doodle.plat_index = j
             ge[i].fitness += 0.1
-            output = nets[i].activate(((doodle.rect.centerx, doodle.rect.centery,
+            output = nets[i].activate((doodle.rect.centerx, doodle.rect.centery,
                 (doodle.rect.centerx - platforms[doodle.plat_index].rect.centerx),
                 (doodle.rect.centery - platforms[doodle.plat_index].rect.centery)))
             if output[0] > 0.5:
